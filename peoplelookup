@@ -22,12 +22,13 @@
                 <div class="search-pill"><span>📞</span> Phone Search</div>
             </div>
 
-            <form class="search-form" id="searchForm" onsubmit="handleSearch(event)">
-                <input type="text" id="queryInput" name="q" class="search-input" placeholder="Enter email or phone number here..." required>
-                <button type="submit" class="search-btn" id="searchBtn">
-                    <span id="btnText">Start Search</span>
-                </button>
-            </form>
+           <form class="search-form" id="searchForm" onsubmit="event.preventDefault(); handleSearch(event);">
+    <input type="text" id="queryInput" name="q" class="search-input" placeholder="Enter email or phone number here..." required>
+    <button type="submit" class="search-btn" id="searchBtn">
+        <span id="btnText">Start Search</span>
+    </button>
+</form>
+
             
             <!-- Loading Indicator Animation -->
             <div class="loading-overlay" id="loadingOverlay">
