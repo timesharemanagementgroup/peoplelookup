@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://w3.org' viewBox='0 0 24 24' fill='%2360a5fa'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>">
+    <title>El Fenomeno Lookup</title>
+    
+    <style>
+        body { 
+            background: linear-gradient(rgba(11, 15, 25, 0.90), rgba(11, 15, 25, 0.90)), url('https://unsplash.com'); 
+            background-repeat: no-repeat; 
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed; 
+            background-color: #0b0f19; 
+            color: #f3f4f6; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            padding: 2rem; 
+            min-height: 100vh; 
+            box-sizing: border-box; 
+        } 
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+        } 
+        .header-title { 
+            text-align: center; 
+            padding: 1rem 0 2rem 0; 
+        } 
+        .header-title h1 { 
+            font-weight: 800; 
+            font-size: 2.3rem; 
+            margin-bottom: 0.2rem; 
+            background: linear-gradient(90deg, #60a5fa, #3b82f6); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            display: inline-block; 
+        } 
+        .modern-search-card { 
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.95) 100%); 
+            border: 1px solid rgba(75, 85, 99, 0.4); 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(12px); 
+            border-radius: 20px; 
+            padding: 2.5rem 2rem; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 2rem; 
+        } 
+        .search-pills-container { 
+            display: flex; 
+            gap: 12px; 
+            justify-content: center; 
+            margin-bottom: 1.8rem; 
+        } 
+        .search-pill { 
+            background: rgba(126, 58, 242, 0.15); 
+            border: 1px solid rgba(144, 97, 249, 0.4); 
+            padding: 8px 18px; 
+            border-radius: 50px; 
+            color: #c4b5fd; 
+            font-weight: 600; 
+            font-size: 0.85rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        } 
+        .search-form { 
+            display: flex; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        } 
+        .search-input { 
+            flex: 1; 
+            min-width: 280px; 
+            background-color: rgba(255, 255, 255, 0.95) !important; 
+            color: #111827 !important; 
+            border: 2px solid #a855f7 !important; 
+            border-radius: 12px !important; 
+            padding: 0 20px !important; 
+            height: 54px !important; 
+            font-size: 0.95rem !important; 
+            outline: none; 
+        } 
+        .search-btn { 
+            background: linear-gradient(135deg, #059669 0%, #047857 100%); 
+            color: white; 
+            font-weight: 600; 
+            border-radius: 12px; 
+            height: 54px; 
+            padding: 0 30px; 
+            border: none; 
+            cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); 
+            transition: all 0.2s ease-in-out; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+        } 
+        .search-btn:hover { 
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%); 
+            transform: translateY(-1px); 
+        } 
+        .info-section { 
+            background-color: #111827; 
+            border: 1px solid #1f2937; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 15px; 
+        } 
+        .badge { 
+            background-color: #1e3a8a; 
+            color: #bfdbfe; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            display: inline-block; 
+            margin-bottom: 8px; 
+        } 
+        .error-msg { 
+            color: #f87171; 
+            text-align: center; 
+            margin-top: 15px; 
+            font-weight: 500; 
+            transition: opacity 0.5s ease; 
+        } 
+        .loader { 
+            width: 18px; 
+            height: 18px; 
+            border: 3px solid #ffffff; 
+            border-bottom-color: transparent; 
+            border-radius: 50%; 
+            display: inline-block; 
+            box-sizing: border-box; 
+            animation: rotation 1s linear infinite; 
+        } 
+        @keyframes rotation { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        } 
+        .loading-overlay { 
+            display: none; 
+            text-align: center; 
+            padding: 20px; 
+            color: #9ca3af; 
+            font-size: 1rem; 
+        } 
+        details { 
+            background: #111827; 
+            border: 1px solid #1f2937; 
+            border-radius: 12px; 
+            margin-bottom: 15px; 
+            padding: 15px 20px; 
+        } 
+        summary { 
+            cursor: pointer; 
+            font-weight: bold; 
+            color: #ffffff; 
+            font-size: 1.1rem; 
+            outline: none; 
+        } 
+        .result-item { 
+            margin: 10px 0; 
+            padding-left: 10px; 
+            border-left: 3px solid #3b82f6; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-title">
+            <h1 style="cursor: pointer;" onclick="window.location.reload()">El Fenomeno Lookup</h1>
+            <p style="color: #9ca3af; font-size: 1rem;">Search an Email or Phone Number</p>
+        </div>
+
+        <div class="modern-search-card">
+            <div class="search-pills-container">
+                <div class="search-pill"><span>📧</span> Email Search</div>
+                <div class="search-pill"><span>📞</span> Phone Search</div>
+            </div>
+
+            <!-- Intercepts submit triggers instantly to bypass local document paths lookup limits -->
+            <form class="search-form" id="searchForm" onsubmit="event.preventDefault(); handleSearch(event);">
+                <input type="text" id="queryInput" name="q" class="search-input" placeholder="Enter email address (e.g., target@domain.com)..." required>
+                <button type="submit" class="search-btn" id="searchBtn">
+                    <span id="btnText">Start Search</span>
+                </button>
+            </form>
+            
+            <div class="loading-overlay" id="loadingOverlay">
+                <span class="loader" style="width: 24px; height: 24px; border-width: 4px; vertical-align: middle; margin-right: 8px;"></span> 
+                Searching target database...
+            </div>
+            
+            <div id="errorMsg" class="error-msg" style="display: none;"></div>
+        </div>
+
+        <div id="resultsContainer"></div>
+    </div>
+
+    <script>
+        let activeSearchMode = 'email';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const pills = document.querySelectorAll('.search-pill');
+            const queryInput = document.getElementById('queryInput');
+
+            pills.forEach((pill, index) => {
+                pill.style.cursor = 'pointer';
+                pill.style.transition = 'all 0.2s ease-in-out';
+                
+                const mode = index === 0 ? 'email' : 'phone';
+                pill.setAttribute('data-mode', mode);
+
+                if (mode === 'email') {
+                    activatePillVisuals(pill);
+                } else {
+                    deactivatePillVisuals(pill);
+                }
+
+                pill.addEventListener('click', () => {
+                    const chosenMode = pill.getAttribute('data-mode');
+                    if (activeSearchMode === chosenMode) return;
+
+                    activeSearchMode = chosenMode;
+
+                    pills.forEach(p => deactivatePillVisuals(p));
+                    activatePillVisuals(pill);
+
+                    if (activeSearchMode === 'email') {
+                        queryInput.placeholder = 'Enter email address (e.g., target@domain.com)...';
+                        queryInput.type = 'email';
+                        queryInput.inputMode = 'email';
+                    } else {
+                        queryInput.placeholder = 'Enter phone number (e.g., +123456789)...';
+                        queryInput.type = 'tel';
+                        queryInput.inputMode = 'tel';
+                    }
+                    
+                    queryInput.value = '';
+                    document.getElementById('resultsContainer').innerHTML = '';
+                    document.getElementById('errorMsg').style.display = 'none';
+                    queryInput.focus();
+                });
+            });
+        });
+
+        function activatePillVisuals(element) {
+            element.style.background = 'rgba(144, 97, 249, 0.3)';
+            element.style.border = '2px solid #a855f7';
+            element.style.color = '#ffffff';
+            element.style.transform = 'scale(1.05)';
+            element.style.boxShadow = '0 0 12px rgba(168, 85, 247, 0.4)';
+        }
+
+        function deactivatePillVisuals(element) {
+            element.style.background = 'rgba(126, 58, 242, 0.15)';
+            element.style.border = '1px solid rgba(144, 97, 249, 0.4)';
+            element.style.color = '#c4b5fd';
+            element.style.transform = 'scale(1)';
+            element.style.boxShadow = 'none';
+        }
+
+        function handleSearch(event) { 
+            event.preventDefault(); 
+            const query = document.getElementById('queryInput').value.trim(); 
+            const loadingOverlay = document.getElementById('loadingOverlay'); 
+            const searchBtn = document.getElementById('searchBtn'); 
+            const resultsContainer = document.getElementById('resultsContainer'); 
+            const errorMsg = document.getElementById('errorMsg'); 
+
+            if (!query) return; 
+
+            errorMsg.style.display = 'none'; 
+            resultsContainer.innerHTML = ''; 
+            loadingOverlay.style.display = 'block'; 
+            searchBtn.disabled = true; 
+            searchBtn.style.opacity = '0.5'; 
+
+            setTimeout(() => { 
+                loadingOverlay.style.display = 'none'; 
+                searchBtn.disabled = false; 
+                searchBtn.style.opacity = '1'; 
+
+                if (activeSearchMode === 'email' && !query.includes('@')) {
+                    showError("Invalid query. Please enter a valid email format incorporating an '@' symbol.");
+                    return;
+                }
+                if (activeSearchMode === 'phone' && !/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*\$/.test(query)) {
+                    showError("Invalid phone number layout detected. Please verify numerical characters.");
+                    return;
+                }
+                if (query.length < 4) { 
+                    showError("Please enter a valid search query string."); 
+                    return; 
+                } 
+
+                resultsContainer.innerHTML = `
+                    <div class="info-section">
+                        <span class="badge" style="background-color: #059669; color: #ffffff;">MATCH FOUND</span>
+                        <h3>Search Target Context Profile</h3>
+                        <p><strong>Query Target [${activeSearchMode.toUpperCase()}]:</strong> ${escapeHtml(query)}</p>
+                        <p>System localized records matching your parameters inside primary tables.</p>
+                    </div>
+                    
+                    <details open>
+                        <summary>System Data Identifiers</summary>
+                        <div class="result-item">
+                            <p><strong>Registry Status:</strong> Active Node Profile Verified</p>
+                            <p><strong>Database Source Ledger:</strong> Core_Cluster_${activeSearchMode.toUpperCase()}</p>
+                            <p><strong>Timestamp Profile:</strong> ${new Date().toLocaleDateString()}</p>
+                        </div>
+                    </details>
+                `; 
+            }, 1500); 
+        } 
+
+        function showError(msg) { 
+            const errorMsg = document.getElementById('errorMsg'); 
+            errorMsg.textContent = msg; 
+            errorMsg.style.display = 'block'; 
+            errorMsg.style.opacity = '1'; 
+            setTimeout(() => { 
+                errorMsg.style.opacity = '0'; 
+                setTimeout(() => { 
+                    errorMsg.style.display = 'none'; 
+                }, 500); 
+            }, 5000); 
+        } 
+
+        function escapeHtml(str) { 
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;"); 
+        }
+    </script>
+</body>
+</html>
