@@ -44,15 +44,15 @@
     <div class="container">
         <div class="header-title">
             <h1 style="cursor: pointer;" onclick="window.location.reload()">El Fenomeno Lookup</h1>
-            <p style="color: #9ca3af; font-size: 1rem;">Search an Email or Phone Number</p>
+            <p style="color: #9ca3af; font-size: 1rem;">Search a Name or USA Phone Number</p>
         </div>
         <div class="modern-search-card">
             <div class="search-pills-container">
-                <div class="search-pill"><span>📧</span> Email Search</div>
+                <div class="search-pill"><span>👤</span> Name Search</div>
                 <div class="search-pill"><span>📞</span> Phone Search</div>
             </div>
             <form class="search-form" id="searchForm" onsubmit="event.preventDefault(); handleSearch(event);">
-                <input type="text" id="queryInput" name="q" class="search-input" placeholder="Enter email address (e.g., target@domain.com)..." required>
+                <input type="text" id="queryInput" name="q" class="search-input" placeholder="Enter full name here..." required>
                 <button type="submit" class="search-btn" id="searchBtn"><span id="btnText">Start Search</span></button>
                 <button type="button" class="clear-btn" id="clearBtn" onclick="handleClear()"><span>🗑️</span> Clear</button>
             </form>
@@ -64,20 +64,20 @@
         <div id="resultsContainer"></div>
     </div>
     <script>
-        let activeSearchMode = 'email';
+        let activeSearchMode = 'name';
         document.addEventListener('DOMContentLoaded', () => {
             const pills = document.querySelectorAll('.search-pill');
             const queryInput = document.getElementById('queryInput');
             queryInput.addEventListener('input', (e) => { if (activeSearchMode === 'phone') formatUSAPhone(e.target); });
             pills.forEach((pill, index) => {
                 pill.style.cursor = 'pointer'; pill.style.transition = 'all 0.2s ease-in-out';
-                const mode = index === 0 ? 'email' : 'phone'; pill.setAttribute('data-mode', mode);
-                if (mode === 'email') activatePillVisuals(pill); else deactivatePillVisuals(pill);
+                const mode = index === 0 ? 'name' : 'phone'; pill.setAttribute('data-mode', mode);
+                if (mode === 'name') activatePillVisuals(pill); else deactivatePillVisuals(pill);
                 pill.addEventListener('click', () => {
                     const chosenMode = pill.getAttribute('data-mode'); if (activeSearchMode === chosenMode) return;
                     activeSearchMode = chosenMode; pills.forEach(p => deactivatePillVisuals(p)); activatePillVisuals(pill);
-                    if (activeSearchMode === 'email') {
-                        queryInput.placeholder = 'Enter email address (e.g., target@domain.com)...'; queryInput.type = 'email'; queryInput.inputMode = 'email';
+                    if (activeSearchMode === 'name') {
+                        queryInput.placeholder = 'Enter full name here...'; queryInput.type = 'text'; queryInput.inputMode = 'text';
                     } else {
                         queryInput.placeholder = 'Enter USA number (e.g., (202) 555-0143)...'; queryInput.type = 'tel'; queryInput.inputMode = 'tel';
                     }
@@ -106,8 +106,9 @@
             event.preventDefault(); const query = document.getElementById('queryInput').value.trim(); const loadingOverlay = document.getElementById('loadingOverlay'); 
             const searchBtn = document.getElementById('searchBtn'); const clearBtn = document.getElementById('clearBtn'); const resultsContainer = document.getElementById('resultsContainer'); const errorMsg = document.getElementById('errorMsg'); 
             if (!query) return; 
-            if (activeSearchMode === 'email' && !query.includes('@')) { showError("Invalid structural layout. Email requires an '@' symbol."); return; }
             if (activeSearchMode === 'phone' && query.replace(/\D/g, '').length < 10) { showError("Please enter a complete 10-digit USA number."); return; }
+            if (activeSearchMode === 'name' && query.length < 3) { showError("Please enter a longer name query."); return; }
+            
             errorMsg.style.display = 'none'; resultsContainer.innerHTML = ''; loadingOverlay.style.display = 'block'; searchBtn.disabled = true; searchBtn.style.opacity = '0.5'; clearBtn.disabled = true; clearBtn.style.opacity = '0.5';
             try {
                 const url = `/api/lookup?target=${encodeURIComponent(query)}&mode=${activeSearchMode}`;
@@ -115,27 +116,29 @@
                 const result = await response.json();
                 if (result.status === "success") {
                     const profileData = result.data;
-                    let secondaryLabel = activeSearchMode === 'phone' ? 'Wireless Carrier' : 'Domain Provider';
-                    let secondaryVal = activeSearchMode === 'phone' ? (profileData.carrier || 'Unknown Network') : profileData.domain;
-                    let lineTypeRow = activeSearchMode === 'phone' ? `<tr><th>Line Connection Type</th><td>${escapeHtml(profileData.phone_type || 'N/A')}</td></tr>` : '';
-                    let locationLabel = activeSearchMode === 'phone' ? profileData.country : profileData.location;
-
-                    resultsContainer.innerHTML = `
-                        <div class="info-section">
-                            <span class="badge" style="background-color: #1e3a8a; color: #bfdbfe;">QUERY COMPLETED</span>
-                            <h3>Registry Profile Context Matrix</h3>
-                            <p><strong>Query Target [${activeSearchMode.toUpperCase()}]:</strong> ${escapeHtml(query)}</p>
-                        </div>
-                        <details open>
-                            <summary>Enriched Profile Records</summary>
-                            <div class="data-table-container"><table class="custom-data-table">
+                    
+                    if (activeSearchMode === 'phone' && result.source === "live_api") {
+                        const apiData = result.data; const badgeColor = apiData.phone_valid ? "#059669" : "#dc2626"; const labelText = apiData.phone_valid ? "VALID REGISTRY" : "SUSPECT / BLOCKED";
+                        resultsContainer.innerHTML = `
+                            <div class="info-section"><span class="badge" style="background-color: ${badgeColor}; color: #ffffff;">${labelText}</span><h3>Live Cloud Registry Data</h3><p><strong>Query Target:</strong> ${escapeHtml(query)}</p></div>
+                            <details open><summary>Enriched Data Matrix</summary><div class="data-table-container"><table class="custom-data-table">
                             <tr><th>Risk Evaluation</th><td>${getRiskBadgeHTML(profileData.risk)}</td></tr>
-                            ${activeSearchMode === 'email' ? `<tr><th>Full Legal Name</th><td>\${escapeHtml(profileData.name)}</td></tr>` : ''}
-                            <tr><th>Geographic Location</th><td>${escapeHtml(locationLabel || 'United States')}</td></tr>
-                            <tr><th>${secondaryLabel}</th><td>${escapeHtml(secondaryVal)}</td></tr>
-                            ${lineTypeRow}
-                            </table></div>
-                        </details>`;
+                            <tr><th>Wireless Carrier</th><td>${escapeHtml(apiData.carrier || 'Unknown Network Provider')}</td></tr><tr><th>Line Connection Type</th><td>${escapeHtml(apiData.phone_type || 'Unknown Type')}</td></tr><tr><th>Registered Country</th><td>${escapeHtml(apiData.country || 'United States')}</td></tr><tr><th>International ID</th><td>${escapeHtml(apiData.international_number)}</td></tr>
+                            </table></div></details>`;
+                    } else {
+                        let thirdRowHeader = activeSearchMode === 'name' ? 'File Status Profile' : 'Wireless Carrier';
+                        let thirdRowVal = activeSearchMode === 'name' ? profileData.line_status : (profileData.carrier || 'Unknown');
+                        let geoLabel = activeSearchMode === 'name' ? profileData.location : profileData.country;
+
+                        resultsContainer.innerHTML = `
+                            <div class="info-section"><span class="badge" style="background-color: #1e3a8a; color: #bfdbfe;">QUERY COMPLETED</span><h3>Registry Profile Context Matrix</h3><p><strong>Query Target [${activeSearchMode.toUpperCase()}]:</strong> ${escapeHtml(query)}</p></div>
+                            <details open><summary>Enriched Profile Records</summary><div class="data-table-container"><table class="custom-data-table">
+                            <tr><th>Risk Evaluation</th><td>${getRiskBadgeHTML(profileData.risk)}</td></tr>
+                            ${activeSearchMode === 'name' ? `<tr><th>Target Full Name</th><td>\${escapeHtml(profileData.name)}</td></tr>` : ''}
+                            <tr><th>Geographic Location</th><td>${escapeHtml(geoLabel)}</td></tr>
+                            <tr><th>${thirdRowHeader}</th><td>${escapeHtml(thirdRowVal)}</td></tr>
+                            </table></div></details>`;
+                    }
                 } else { showError(result.message || "No matches located inside tables."); }
             } catch (err) { showError(`Query tracking breakdown: ${err.message}`); } 
             finally { loadingOverlay.style.display = 'none'; searchBtn.disabled = false; searchBtn.style.opacity = '1'; clearBtn.disabled = false; clearBtn.style.opacity = '1'; }
